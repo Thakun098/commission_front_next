@@ -36,12 +36,12 @@ export interface CalculateResponse {
  * Calculate commission via API
  */
 export const calculateCommission = async (
-  request: CalculateRequest
+  request: CalculateRequest,
 ): Promise<CalculateResponse> => {
   try {
     const response = await apiClient.post<CalculateResponse>(
       "/api/commission/calculate",
-      request
+      request,
     );
     return response.data;
   } catch (error) {
