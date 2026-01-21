@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint"
   },
   "dependencies": {
@@ -20,6 +22,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^4.0.17",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.1.1",
     "eslint-plugin-react": "^7.37.5",
@@ -27,6 +30,7 @@
     "jiti": "^2.6.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "typescript-eslint": "^8.53.0"
+    "typescript-eslint": "^8.53.0",
+    "vitest": "^4.0.17"
   }
 }
