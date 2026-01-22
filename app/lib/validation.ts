@@ -52,13 +52,13 @@ export const validateInputRanges = (
 ): string[] => {
   const errors: string[] = [];
 
-  if (isNaN(locks) || locks < 1 || locks > 70) {
+  if (Number.isNaN(locks) || locks < 1 || locks > 70) {
     errors.push("Locks must be between 1 and 70");
   }
-  if (isNaN(stocks) || stocks < 1 || stocks > 80) {
+  if (Number.isNaN(stocks) || stocks < 1 || stocks > 80) {
     errors.push("Stocks must be between 1 and 80");
   }
-  if (isNaN(barrels) || barrels < 1 || barrels > 90) {
+  if (Number.isNaN(barrels) || barrels < 1 || barrels > 90) {
     errors.push("Barrels must be between 1 and 90");
   }
 
