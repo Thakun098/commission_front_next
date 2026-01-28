@@ -1,10 +1,8 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { Entry, FieldErrors } from './lib/types';
 import { validateName, validateNumericField, validateInputRanges } from './lib/validation';
 import { calculateCommission as calculateCommissionAPI } from './lib/api';
-
 export default function Home() {
   const [name, setName] = useState('');
   const [locks, setLocks] = useState('');
@@ -25,28 +23,21 @@ export default function Home() {
     }
     return 0;
   });
-
-  // Field-level validation errors
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({
     name: '',
     locks: '',
     stocks: '',
     barrels: ''
   });
-
-  // Save entries to localStorage when they change
   useEffect(() => {
     localStorage.setItem('commissionEntries', JSON.stringify(entries));
     localStorage.setItem('commissionEntryCount', entryCount.toString());
   }, [entries, entryCount]);
-
   const handleCalculate = async () => {
-    // Validate all fields using imported validation functions (client-side validation)
     const nameError = validateName(name);
     const locksError = validateNumericField(locks, 'Locks');
     const stocksError = validateNumericField(stocks, 'Stocks');
     const barrelsError = validateNumericField(barrels, 'Barrels');
-
     const newFieldErrors: FieldErrors = {
       name: nameError,
       locks: locksError,
@@ -54,25 +45,17 @@ export default function Home() {
       barrels: barrelsError
     };
     setFieldErrors(newFieldErrors);
-    
     const l = parseInt(locks) || 0;
     const s = parseInt(stocks) || 0;
     const b = parseInt(barrels) || 0;
-    
-    // Collect all errors for the entry
     const allErrors: string[] = [];
     if (nameError) allErrors.push(nameError);
     if (locksError) allErrors.push(locksError);
     if (stocksError) allErrors.push(stocksError);
     if (barrelsError) allErrors.push(barrelsError);
-    
-    // Also check range validation
     const rangeErrors = validateInputRanges(l, s, b);
     allErrors.push(...rangeErrors);
-    
     const isClientValid = allErrors.length === 0;
-    
-    // If client-side validation fails, add entry with errors but don't call API
     if (!isClientValid) {
       const newEntry: Entry = {
         id: entryCount + 1,
@@ -85,13 +68,10 @@ export default function Home() {
         isValid: false,
         errors: allErrors
       };
-      
       setEntries([...entries, newEntry]);
       setEntryCount(entryCount + 1);
       return;
     }
-    
-    // Call API for calculation (backend handles its own validation as security layer)
     setIsLoading(true);
     try {
       const response = await calculateCommissionAPI({
@@ -100,7 +80,6 @@ export default function Home() {
         stocks: s,
         barrels: b
       });
-      
       if (response.success && response.data) {
         const newEntry: Entry = {
           id: entryCount + 1,
@@ -113,11 +92,9 @@ export default function Home() {
           isValid: true,
           errors: []
         };
-        
         setEntries([...entries, newEntry]);
         setEntryCount(entryCount + 1);
       } else {
-        // Backend validation failed
         const newEntry: Entry = {
           id: entryCount + 1,
           name: name || 'Employee',
@@ -129,7 +106,6 @@ export default function Home() {
           isValid: false,
           errors: response.errors || ['Unknown error from server']
         };
-        
         setEntries([...entries, newEntry]);
         setEntryCount(entryCount + 1);
       }
@@ -144,15 +120,13 @@ export default function Home() {
         commission: 0,
         isValid: false,
         errors: [`Error: ${error instanceof Error ? error.message : 'Unknown error'}`]
-      };
-      
+      };      
       setEntries([...entries, newEntry]);
       setEntryCount(entryCount + 1);
     } finally {
       setIsLoading(false);
     }
   };
-
   const handleReset = () => {
     setName('');
     setLocks('');
@@ -160,26 +134,19 @@ export default function Home() {
     setBarrels('');
     setFieldErrors({ name: '', locks: '', stocks: '', barrels: '' });
   };
-
   const handleClearHistory = () => {
     setEntries([]);
     setEntryCount(0);
     localStorage.removeItem('commissionEntries');
     localStorage.removeItem('commissionEntryCount');
   };
-
   const handleDeleteEntry = (id: number) => {
     setEntries(entries.filter(entry => entry.id !== id));
   };
-
-  // Calculate totals from valid entries only
   const validEntries = entries.filter(e => e.isValid);
-
   return (
     <div className="calculator-container">
       <h1 className="calculator-title">โปรแกรมคำนวณค่าคอมมิชชั่น</h1>
-      
-      {/* Input Form */}
       <div className="form-group">
         <label className="form-label">ชื่อพนักงาน</label>
         <input
@@ -195,7 +162,6 @@ export default function Home() {
         />
         {fieldErrors.name && <div className="field-error-message">{fieldErrors.name}</div>}
       </div>
-      
       <div className="form-group">
         <label className="form-label">Locks</label>
         <input
@@ -213,7 +179,6 @@ export default function Home() {
         />
         {fieldErrors.locks && <div className="field-error-message">{fieldErrors.locks}</div>}
       </div>
-      
       <div className="form-group">
         <label className="form-label">Stocks</label>
         <input
@@ -231,7 +196,6 @@ export default function Home() {
         />
         {fieldErrors.stocks && <div className="field-error-message">{fieldErrors.stocks}</div>}
       </div>
-      
       <div className="form-group">
         <label className="form-label">Barrels</label>
         <input
@@ -249,8 +213,6 @@ export default function Home() {
         />
         {fieldErrors.barrels && <div className="field-error-message">{fieldErrors.barrels}</div>}
       </div>
-      
-      {/* Buttons */}
       <div className="button-group">
         <button 
           className="btn btn-calculate" 
@@ -267,11 +229,8 @@ export default function Home() {
           เคลียร์ข้อมูล
         </button>
       </div>
-      
-      {/* Results Section */}
       {entries.length > 0 ? (
         <>
-          {/* Results Table */}
           <div className="table-scroll-container">
             <table className="results-table">
               <thead>
@@ -294,8 +253,6 @@ export default function Home() {
               </tbody>
             </table>
           </div>
-          
-          {/* History Section */}
           <div className="history-section">
             <div className="history-header">
               <span className="history-title">ประวัติการคำนวณ</span>
@@ -311,7 +268,6 @@ export default function Home() {
                 เคลียร์ประวัติทั้งหมด
               </button>
             </div>
-            
             <div className="history-list">
               {entries.map((entry) => (
                 <div key={entry.id} className={`history-item ${!entry.isValid ? 'history-item-error' : ''}`}>
@@ -357,7 +313,6 @@ export default function Home() {
           </div>
         </>
       ) : (
-        /* Empty State - Show clock icon */
         <div className="empty-state">
           <div className="empty-state-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
