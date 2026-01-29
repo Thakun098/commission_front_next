@@ -19,6 +19,7 @@ body {
   background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
   color: var(--foreground);
   font-family:
+    var(--font-noto-sans-thai),
     "Sarabun",
     "Prompt",
     -apple-system,
@@ -59,6 +60,7 @@ body {
   font-size: 0.875rem;
   color: var(--text-dark);
   margin-bottom: 6px;
+  margin-top: 6px;
   font-weight: 500;
 }
 
@@ -145,22 +147,45 @@ body {
   background: #ffffff;
   color: var(--text-dark);
   border: 1px solid var(--border-light);
+  border-color: #ef4444;
 }
 
 .btn-reset:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
+  background: #ca184e;
+  color: #ffffff;
+  border-color: #630c0c;
 }
 
 /* Results Table */
 .table-scroll-container {
   margin-bottom: 20px;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Scrollbar styling for table */
+.table-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 
 .results-table {
   width: 100%;
+  min-width: 400px;
   border-collapse: collapse;
 }
 
@@ -394,4 +419,105 @@ input[type="number"] {
 
 .history-list::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Confirmation Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-box {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 32px;
+  width: 380px;
+  height: 234px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-icon {
+  color: #f59e0b;
+  margin-bottom: 8px;
+}
+
+.modal-message {
+  font-size: 1rem;
+  color: var(--text-dark);
+  text-align: center;
+  font-weight: 500;
+  margin: 0;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-modal {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.btn-modal-cancel {
+  background: #f3f4f6;
+  color: var(--text-dark);
+  border: 1px solid var(--border-light);
+}
+
+.btn-modal-cancel:hover {
+  background: #e5e7eb;
+}
+
+.btn-modal-confirm {
+  background: var(--danger);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-modal-confirm:hover {
+  background: #dc2626;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }

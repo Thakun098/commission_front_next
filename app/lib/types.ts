@@ -2,6 +2,7 @@
 
 export interface Entry {
   id: number;
+  employeeId: string;
   name: string;
   locks: number;
   stocks: number;
@@ -13,6 +14,7 @@ export interface Entry {
 }
 
 export interface FieldErrors {
+  employeeId: string;
   name: string;
   locks: string;
   stocks: string;

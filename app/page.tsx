@@ -1,9 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { Entry, FieldErrors } from './lib/types';
-import { validateName, validateNumericField, validateInputRanges } from './lib/validation';
+import { validateEmployeeId, validateName, validateNumericField, validateInputRanges } from './lib/validation';
 import { calculateCommission as calculateCommissionAPI } from './lib/api';
+import ConfirmationModal from './components/ConfirmationModal';
+
 export default function Home() {
+  const [employeeId, setEmployeeId] = useState('');
   const [name, setName] = useState('');
   const [locks, setLocks] = useState('');
   const [stocks, setStocks] = useState('');
@@ -24,16 +27,44 @@ export default function Home() {
     return 0;
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({
+    employeeId: '',
     name: '',
     locks: '',
     stocks: '',
     barrels: ''
   });
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  const showConfirmation = (message: string, action: () => void) => {
+    setModalMessage(message);
+    setPendingAction(() => action);
+    setModalOpen(true);
+  };
+
+  const handleModalConfirm = () => {
+    if (pendingAction) {
+      pendingAction();
+    }
+    setModalOpen(false);
+    setPendingAction(null);
+  };
+
+  const handleModalCancel = () => {
+    setModalOpen(false);
+    setPendingAction(null);
+  };
+
   useEffect(() => {
     localStorage.setItem('commissionEntries', JSON.stringify(entries));
     localStorage.setItem('commissionEntryCount', entryCount.toString());
   }, [entries, entryCount]);
+
   const handleCalculate = async () => {
+    const employeeIdError = validateEmployeeId(employeeId);
     const nameError = validateName(name);
     const locksError = validateNumericField(locks, 'Locks');
     const stocksError = validateNumericField(stocks, 'Stocks');
@@ -53,6 +84,7 @@ export default function Home() {
     
     // Combine field errors with range errors (show range error if no format error)
     const newFieldErrors: FieldErrors = {
+      employeeId: employeeIdError,
       name: nameError,
       locks: locksError || locksRangeError,
       stocks: stocksError || stocksRangeError,
@@ -61,6 +93,7 @@ export default function Home() {
     setFieldErrors(newFieldErrors);
     
     const allErrors: string[] = [];
+    if (employeeIdError) allErrors.push(employeeIdError);
     if (nameError) allErrors.push(nameError);
     if (locksError) allErrors.push(locksError);
     if (stocksError) allErrors.push(stocksError);
@@ -82,6 +115,7 @@ export default function Home() {
       if (response.success && response.data) {
         const newEntry: Entry = {
           id: entryCount + 1,
+          employeeId: employeeId.trim(),
           name: response.data.name,
           locks: response.data.locks,
           stocks: response.data.stocks,
@@ -104,202 +138,241 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-  const handleReset = () => {
+
+  const doReset = () => {
+    setEmployeeId('');
     setName('');
     setLocks('');
     setStocks('');
     setBarrels('');
-    setFieldErrors({ name: '', locks: '', stocks: '', barrels: '' });
+    setFieldErrors({ employeeId: '', name: '', locks: '', stocks: '', barrels: '' });
   };
-  const handleClearHistory = () => {
+
+  const handleReset = () => {
+    showConfirmation('ท่านต้องการเคลียร์ข้อมูลหรือไม่', doReset);
+  };
+
+  const doClearHistory = () => {
     setEntries([]);
     setEntryCount(0);
     localStorage.removeItem('commissionEntries');
     localStorage.removeItem('commissionEntryCount');
   };
-  const handleDeleteEntry = (id: number) => {
-    setEntries(entries.filter(entry => entry.id !== id));
+
+  const handleClearHistory = () => {
+    showConfirmation('ท่านต้องการลบประวัติทั้งหมดหรือไม่', doClearHistory);
   };
+
+  const handleDeleteEntry = (id: number) => {
+    showConfirmation('ท่านต้องการลบรายการนี้หรือไม่', () => {
+      setEntries(entries.filter(entry => entry.id !== id));
+    });
+  };
+
   const validEntries = entries.filter(e => e.isValid);
+
   return (
-    <div className="calculator-container">
-      <h1 className="calculator-title">โปรแกรมคำนวณค่าคอมมิชชั่น</h1>
-      <div className="form-group">
-        <label className="form-label">ชื่อพนักงาน</label>
-        <input
-          type="text"
-          className={`form-input ${fieldErrors.name ? 'input-error' : ''}`}
-          placeholder="ตัวอย่างเช่น Ken หรือ ฐากูร"
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
-          }}
-          disabled={isLoading}
-        />
-        {fieldErrors.name && <div className="field-error-message">{fieldErrors.name}</div>}
-      </div>
-      <div className="form-group">
-        <label className="form-label">Locks</label>
-        <input
-          type="number"
-          className={`form-input ${fieldErrors.locks ? 'input-error' : ''}`}
-          placeholder="ใส่ได้สูงสุด 70 และ ไม่ต่ำกว่า 1 ต้องเป็นตัวเลขเท่านั้น"
-          value={locks}
-          onChange={(e) => {
-            setLocks(e.target.value);
-            if (fieldErrors.locks) setFieldErrors(prev => ({ ...prev, locks: '' }));
-          }}
-          min="1"
-          max="70"
-          disabled={isLoading}
-        />
-        {fieldErrors.locks && <div className="field-error-message">{fieldErrors.locks}</div>}
-      </div>
-      <div className="form-group">
-        <label className="form-label">Stocks</label>
-        <input
-          type="number"
-          className={`form-input ${fieldErrors.stocks ? 'input-error' : ''}`}
-          placeholder="ใส่ได้สูงสุด 80 และ ไม่ต่ำกว่า 1 ต้องเป็นตัวเลขเท่านั้น"
-          value={stocks}
-          onChange={(e) => {
-            setStocks(e.target.value);
-            if (fieldErrors.stocks) setFieldErrors(prev => ({ ...prev, stocks: '' }));
-          }}
-          min="1"
-          max="80"
-          disabled={isLoading}
-        />
-        {fieldErrors.stocks && <div className="field-error-message">{fieldErrors.stocks}</div>}
-      </div>
-      <div className="form-group">
-        <label className="form-label">Barrels</label>
-        <input
-          type="number"
-          className={`form-input ${fieldErrors.barrels ? 'input-error' : ''}`}
-          placeholder="ใส่ได้สูงสุด 90 และ ไม่ต่ำกว่า 1 ต้องเป็นตัวเลขเท่านั้น"
-          value={barrels}
-          onChange={(e) => {
-            setBarrels(e.target.value);
-            if (fieldErrors.barrels) setFieldErrors(prev => ({ ...prev, barrels: '' }));
-          }}
-          min="1"
-          max="90"
-          disabled={isLoading}
-        />
-        {fieldErrors.barrels && <div className="field-error-message">{fieldErrors.barrels}</div>}
-      </div>
-      <div className="button-group">
-        <button 
-          className="btn btn-calculate" 
-          onClick={handleCalculate}
-          disabled={isLoading}
-        >
-          {isLoading ? 'กำลังคำนวณ...' : 'คำนวณ'}
-        </button>
-        <button 
-          className="btn btn-reset" 
-          onClick={handleReset}
-          disabled={isLoading}
-        >
-          เคลียร์ข้อมูล
-        </button>
-      </div>
-      {entries.length > 0 ? (
-        <>
-          <div className="table-scroll-container">
-            <table className="results-table">
-              <thead>
-                <tr>
-                  <th>รายการที่</th>
-                  <th>ชื่อพนักงาน</th>
-                  <th>ยอดขาย</th>
-                  <th>ค่าคอมมิชชั่น</th>
-                </tr>
-              </thead>
-              <tbody>
-                {validEntries.map((entry) => (
-                  <tr key={entry.id}>
-                    <td>{entry.id}</td>
-                    <td>{entry.name}</td>
-                    <td>{entry.sales} ฿</td>
-                    <td>{entry.commission} ฿</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="history-section">
-            <div className="history-header">
-              <span className="history-title">ประวัติการคำนวณ</span>
-              <button 
-                className="btn-clear-all" 
-                onClick={handleClearHistory}
-                disabled={isLoading}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                เคลียร์ประวัติทั้งหมด
-              </button>
-            </div>
-            <div className="history-list">
-              {entries.map((entry) => (
-                <div key={entry.id} className={`history-item ${!entry.isValid ? 'history-item-error' : ''}`}>
-                  <div className="history-item-left">
-                    <span className="history-item-number">รายการที่ {entry.id}</span>
-                  </div>
-                  <div className="history-item-center">
-                    <div className="history-item-details">
-                      <span>ชื่อพนักงาน : {entry.name}</span>
-                      <span className="history-item-sales">ยอดขาย : {entry.sales} ฿</span>
-                    </div>
-                    <div className="history-item-inputs">
-                      <span className={!entry.isValid && entry.errors.some(e => e.includes('Locks')) ? 'error-text' : ''}>
-                        Locks : {entry.locks}
-                      </span>
-                      <span className={!entry.isValid && entry.errors.some(e => e.includes('Stocks')) ? 'error-text' : ''}>
-                        Stocks : {entry.stocks}
-                      </span>
-                      <span className={!entry.isValid && entry.errors.some(e => e.includes('Barrels')) ? 'error-text' : ''}>
-                        Barrels : {entry.barrels}
-                      </span>
-                      <span className="history-item-commission">ค่าคอมมิชชั่น : {entry.commission} ฿</span>
-                    </div>
-                    {!entry.isValid && (
-                      <div className="history-item-error-msg">ข้อมูลไม่ถูกต้อง</div>
-                    )}
-                  </div>
-                  <div className="history-item-right">
-                    <button 
-                      className="btn-delete" 
-                      onClick={() => handleDeleteEntry(entry.id)}
-                      title="ลบรายการนี้"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-          </div>
-          <p className="empty-state-text">ประวัติการคำนวณจะโชว์หลังจากการคำนวณ</p>
+    <>
+      <ConfirmationModal
+        isOpen={modalOpen}
+        confirmationMessage={modalMessage}
+        onConfirm={handleModalConfirm}
+        onCancel={handleModalCancel}
+      />
+      <div className="calculator-container">
+        <h1 className="calculator-title">โปรแกรมคำนวณค่าคอมมิชชั่น</h1>
+        <div className="form-group">
+          <label className="form-label">รหัสพนักงาน</label>
+          <input
+            type="text"
+            className={`form-input ${fieldErrors.employeeId ? 'input-error' : ''}`}
+            placeholder="ตัวอย่างเช่น 671118959"
+            value={employeeId}
+            onChange={(e) => {
+              setEmployeeId(e.target.value);
+              if (fieldErrors.employeeId) setFieldErrors(prev => ({ ...prev, employeeId: '' }));
+            }}
+            disabled={isLoading}
+          />
+          {fieldErrors.employeeId && <div className="field-error-message">{fieldErrors.employeeId}</div>}
         </div>
-      )}
-    </div>
+        <div className="form-group">
+          <label className="form-label">ชื่อพนักงาน</label>
+          <input
+            type="text"
+            className={`form-input ${fieldErrors.name ? 'input-error' : ''}`}
+            placeholder="ตัวอย่างเช่น Ken หรือ ฐากูร"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
+            }}
+            disabled={isLoading}
+          />
+          {fieldErrors.name && <div className="field-error-message">{fieldErrors.name}</div>}
+        </div>
+        <div className="form-group">
+          <label className="form-label">Locks</label>
+          <input
+            type="number"
+            className={`form-input ${fieldErrors.locks ? 'input-error' : ''}`}
+            placeholder="ใส่ค่าตัวเลขจำนวนเต็ม 1-70"
+            value={locks}
+            onChange={(e) => {
+              setLocks(e.target.value);
+              if (fieldErrors.locks) setFieldErrors(prev => ({ ...prev, locks: '' }));
+            }}
+            min="1"
+            max="70"
+            disabled={isLoading}
+          />
+          {fieldErrors.locks && <div className="field-error-message">{fieldErrors.locks}</div>}
+        </div>
+        <div className="form-group">
+          <label className="form-label">Stocks</label>
+          <input
+            type="number"
+            className={`form-input ${fieldErrors.stocks ? 'input-error' : ''}`}
+            placeholder="ใส่ค่าตัวเลขจำนวนเต็ม 1-80"
+            value={stocks}
+            onChange={(e) => {
+              setStocks(e.target.value);
+              if (fieldErrors.stocks) setFieldErrors(prev => ({ ...prev, stocks: '' }));
+            }}
+            min="1"
+            max="80"
+            disabled={isLoading}
+          />
+          {fieldErrors.stocks && <div className="field-error-message">{fieldErrors.stocks}</div>}
+        </div>
+        <div className="form-group">
+          <label className="form-label">Barrels</label>
+          <input
+            type="number"
+            className={`form-input ${fieldErrors.barrels ? 'input-error' : ''}`}
+            placeholder="ใส่ค่าตัวเลขจำนวนเต็ม 1-90"
+            value={barrels}
+            onChange={(e) => {
+              setBarrels(e.target.value);
+              if (fieldErrors.barrels) setFieldErrors(prev => ({ ...prev, barrels: '' }));
+            }}
+            min="1"
+            max="90"
+            disabled={isLoading}
+          />
+          {fieldErrors.barrels && <div className="field-error-message">{fieldErrors.barrels}</div>}
+        </div>
+        <div className="button-group">
+          <button 
+            className="btn btn-calculate" 
+            onClick={handleCalculate}
+            disabled={isLoading}
+          >
+            {isLoading ? 'กำลังคำนวณ...' : 'คำนวณ'}
+          </button>
+          <button 
+            className="btn btn-reset" 
+            onClick={handleReset}
+            disabled={isLoading}
+          >
+            เคลียร์ข้อมูล
+          </button>
+        </div>
+        {entries.length > 0 ? (
+          <>
+            <div className="table-scroll-container">
+              <table className="results-table">
+                <thead>
+                  <tr>
+                    <th>รายการที่</th>
+                    <th>ชื่อพนักงาน</th>
+                    <th>ยอดขาย</th>
+                    <th>ค่าคอมมิชชั่น</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {validEntries.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>{entry.id}</td>
+                      <td>{entry.name}</td>
+                      <td>${entry.sales.toLocaleString()} </td>
+                      <td>${entry.commission.toLocaleString()} </td> 
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="history-section">
+              <div className="history-header">
+                <span className="history-title">ประวัติการคำนวณ</span>
+                <button 
+                  className="btn-clear-all" 
+                  onClick={handleClearHistory}
+                  disabled={isLoading}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                  เคลียร์ประวัติทั้งหมด
+                </button>
+              </div>
+              <div className="history-list">
+                {entries.map((entry) => (
+                  <div key={entry.id} className={`history-item ${!entry.isValid ? 'history-item-error' : ''}`}>
+                    <div className="history-item-left">
+                      <span className="history-item-number">รายการที่ {entry.id}</span>
+                    </div>
+                    <div className="history-item-center">
+                      <div className="history-item-details">
+                        <span>ชื่อพนักงาน : {entry.name}</span>
+                        <span className="history-item-sales">ยอดขาย : ${entry.sales.toLocaleString()}</span>
+                      </div>
+                      <div className="history-item-inputs">
+                        <span className={!entry.isValid && entry.errors.some(e => e.includes('Locks')) ? 'error-text' : ''}>
+                          Locks : {entry.locks}
+                        </span>
+                        <span className={!entry.isValid && entry.errors.some(e => e.includes('Stocks')) ? 'error-text' : ''}>
+                          Stocks : {entry.stocks}
+                        </span>
+                        <span className={!entry.isValid && entry.errors.some(e => e.includes('Barrels')) ? 'error-text' : ''}>
+                          Barrels : {entry.barrels}
+                        </span>
+                        <span className="history-item-commission">ค่าคอมมิชชั่น : ${entry.commission.toLocaleString()}</span>
+                      </div>
+                      {!entry.isValid && (
+                        <div className="history-item-error-msg">ข้อมูลไม่ถูกต้อง</div>
+                      )}
+                    </div>
+                    <div className="history-item-right">
+                      <button 
+                        className="btn-delete" 
+                        onClick={() => handleDeleteEntry(entry.id)}
+                        title="ลบรายการนี้"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <p className="empty-state-text">ประวัติการคำนวณจะโชว์หลังจากการคำนวณ</p>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

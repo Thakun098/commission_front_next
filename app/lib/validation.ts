@@ -7,6 +7,17 @@ export const isInteger = (value: string): boolean => {
   return /^-?\d+$/.test(value.trim());
 };
 
+// Validate employee ID
+export const validateEmployeeId = (employeeId: string): string => {
+  if (employeeId.trim() === "") {
+    return "Please enter Employee ID";
+  }
+  if (!isInteger(employeeId)) {
+    return "Please enter with integer or whole number";
+  }
+  return "";
+};
+
 /**
  * Validate name field - must be non-empty and Thai or English letters only (FR-04)
  */
