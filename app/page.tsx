@@ -285,6 +285,7 @@ export default function Home() {
                 <thead>
                   <tr>
                     <th>รายการที่</th>
+                    <th>รหัสพนักงาน</th>
                     <th>ชื่อพนักงาน</th>
                     <th>ยอดขาย</th>
                     <th>ค่าคอมมิชชั่น</th>
@@ -294,6 +295,7 @@ export default function Home() {
                   {validEntries.map((entry) => (
                     <tr key={entry.id}>
                       <td>{entry.id}</td>
+                      <td>{entry.employeeId}</td>
                       <td>{entry.name}</td>
                       <td>${entry.sales.toLocaleString()} </td>
                       <td>${entry.commission.toLocaleString()} </td> 
@@ -325,6 +327,7 @@ export default function Home() {
                     </div>
                     <div className="history-item-center">
                       <div className="history-item-details">
+                        <span>รหัสพนักงาน : {entry.employeeId}</span>
                         <span>ชื่อพนักงาน : {entry.name}</span>
                         <span className="history-item-sales">ยอดขาย : ${entry.sales.toLocaleString()}</span>
                       </div>
