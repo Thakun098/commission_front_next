@@ -57,19 +57,7 @@ export default function Home() {
     allErrors.push(...rangeErrors);
     const isClientValid = allErrors.length === 0;
     if (!isClientValid) {
-      const newEntry: Entry = {
-        id: entryCount + 1,
-        name: name || 'Employee',
-        locks: l,
-        stocks: s,
-        barrels: b,
-        sales: 0,
-        commission: 0,
-        isValid: false,
-        errors: allErrors
-      };
-      setEntries([...entries, newEntry]);
-      setEntryCount(entryCount + 1);
+      // Just show error messages, don't save invalid entries
       return;
     }
     setIsLoading(true);
@@ -95,34 +83,12 @@ export default function Home() {
         setEntries([...entries, newEntry]);
         setEntryCount(entryCount + 1);
       } else {
-        const newEntry: Entry = {
-          id: entryCount + 1,
-          name: name || 'Employee',
-          locks: l,
-          stocks: s,
-          barrels: b,
-          sales: 0,
-          commission: 0,
-          isValid: false,
-          errors: response.errors || ['Unknown error from server']
-        };
-        setEntries([...entries, newEntry]);
-        setEntryCount(entryCount + 1);
+        // Server returned error - show alert instead of saving
+        alert(response.errors?.join('\n') || 'Unknown error from server');
       }
     } catch (error) {
-      const newEntry: Entry = {
-        id: entryCount + 1,
-        name: name || 'Employee',
-        locks: l,
-        stocks: s,
-        barrels: b,
-        sales: 0,
-        commission: 0,
-        isValid: false,
-        errors: [`Error: ${error instanceof Error ? error.message : 'Unknown error'}`]
-      };      
-      setEntries([...entries, newEntry]);
-      setEntryCount(entryCount + 1);
+      // Network/connection error - show alert instead of saving
+      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
     }
