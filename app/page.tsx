@@ -38,22 +38,33 @@ export default function Home() {
     const locksError = validateNumericField(locks, 'Locks');
     const stocksError = validateNumericField(stocks, 'Stocks');
     const barrelsError = validateNumericField(barrels, 'Barrels');
-    const newFieldErrors: FieldErrors = {
-      name: nameError,
-      locks: locksError,
-      stocks: stocksError,
-      barrels: barrelsError
-    };
-    setFieldErrors(newFieldErrors);
+    
     const l = parseInt(locks) || 0;
     const s = parseInt(stocks) || 0;
     const b = parseInt(barrels) || 0;
+    
+    // Get range errors
+    const rangeErrors = validateInputRanges(l, s, b);
+    
+    // Find specific range errors for each field
+    const locksRangeError = rangeErrors.find(e => e.includes('Locks')) || '';
+    const stocksRangeError = rangeErrors.find(e => e.includes('Stocks')) || '';
+    const barrelsRangeError = rangeErrors.find(e => e.includes('Barrels')) || '';
+    
+    // Combine field errors with range errors (show range error if no format error)
+    const newFieldErrors: FieldErrors = {
+      name: nameError,
+      locks: locksError || locksRangeError,
+      stocks: stocksError || stocksRangeError,
+      barrels: barrelsError || barrelsRangeError
+    };
+    setFieldErrors(newFieldErrors);
+    
     const allErrors: string[] = [];
     if (nameError) allErrors.push(nameError);
     if (locksError) allErrors.push(locksError);
     if (stocksError) allErrors.push(stocksError);
     if (barrelsError) allErrors.push(barrelsError);
-    const rangeErrors = validateInputRanges(l, s, b);
     allErrors.push(...rangeErrors);
     const isClientValid = allErrors.length === 0;
     if (!isClientValid) {
