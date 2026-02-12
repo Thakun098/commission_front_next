@@ -10,10 +10,10 @@ export const isInteger = (value: string): boolean => {
 // Validate employee ID
 export const validateEmployeeId = (employeeId: string): string => {
   if (employeeId.trim() === "") {
-    return "โปรดระบุรหัสพนักงาน";
+    return "โปรดระบุ รหัสพนักงาน";
   }
   if (!isInteger(employeeId)) {
-    return "โปรดระบุรหัสพนักงานเป็นตัวเลข";
+    return "โปรดระบุ รหัสพนักงานเป็นตัวเลข";
   }
   return "";
 };
@@ -26,10 +26,10 @@ export const validateName = (name: string): string => {
   const thaiOrEnglishRegex = /^[a-zA-Z\u0E00-\u0E7F\s]+$/;
 
   if (name.trim() === "") {
-    return "โปรดระบุชื่อพนักงาน";
+    return "โปรดระบุ ชื่อพนักงาน";
   }
   if (!thaiOrEnglishRegex.test(name)) {
-    return "ชื่อพนักงานต้องเป็นภาษาไทยหรืออังกฤษเท่านั้น";
+    return "ชื่อพนักงานต้องเป็น ภาษาไทย หรือ อังกฤษ เท่านั้น";
   }
   return "";
 };
