@@ -42,7 +42,7 @@ export const validateNumericField = (
   fieldName: string,
 ): string => {
   if (value.trim() === "") {
-    return `โปรดระบุ${fieldName}`;
+    return `โปรดระบุ ${fieldName}`;
   }
   if (!isInteger(value)) {
     return "โปรดระบุตัวเลขจำนวนเต็ม";
