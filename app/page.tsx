@@ -222,6 +222,7 @@ export default function Home() {
               setLocks(e.target.value);
               if (fieldErrors.locks) setFieldErrors(prev => ({ ...prev, locks: '' }));
             }}
+            onKeyDown={(e) => { if (['e', 'E'].includes(e.key)) e.preventDefault(); }}
             min="1"
             max="70"
             disabled={isLoading}
@@ -239,6 +240,7 @@ export default function Home() {
               setStocks(e.target.value);
               if (fieldErrors.stocks) setFieldErrors(prev => ({ ...prev, stocks: '' }));
             }}
+            onKeyDown={(e) => { if (['e', 'E'].includes(e.key)) e.preventDefault(); }}
             min="1"
             max="80"
             disabled={isLoading}
@@ -256,6 +258,7 @@ export default function Home() {
               setBarrels(e.target.value);
               if (fieldErrors.barrels) setFieldErrors(prev => ({ ...prev, barrels: '' }));
             }}
+            onKeyDown={(e) => { if (['e', 'E'].includes(e.key)) e.preventDefault(); }}
             min="1"
             max="90"
             disabled={isLoading}
