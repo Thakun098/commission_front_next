@@ -10,10 +10,10 @@ export const isInteger = (value: string): boolean => {
 // Validate employee ID
 export const validateEmployeeId = (employeeId: string): string => {
   if (employeeId.trim() === "") {
-    return "Please enter Employee ID";
+    return "โปรดระบุรหัสพนักงาน";
   }
   if (!isInteger(employeeId)) {
-    return "Please enter with integer or whole number";
+    return "โปรดระบุรหัสพนักงานเป็นตัวเลข";
   }
   return "";
 };
@@ -26,10 +26,10 @@ export const validateName = (name: string): string => {
   const thaiOrEnglishRegex = /^[a-zA-Z\u0E00-\u0E7F\s]+$/;
 
   if (name.trim() === "") {
-    return "Please enter Employee Name";
+    return "โปรดระบุชื่อพนักงาน";
   }
   if (!thaiOrEnglishRegex.test(name)) {
-    return "Name must be Thai or English letters only";
+    return "ชื่อพนักงานต้องเป็นภาษาไทยหรืออังกฤษเท่านั้น";
   }
   return "";
 };
@@ -42,10 +42,13 @@ export const validateNumericField = (
   fieldName: string,
 ): string => {
   if (value.trim() === "") {
-    return `Please enter ${fieldName}`;
+    return `โปรดระบุ${fieldName}`;
   }
   if (!isInteger(value)) {
-    return "Please enter with integer or whole number";
+    return "โปรดระบุตัวเลข";
+  }
+  if (Number(value) < 0) {
+    return "กรุณาระบุเป็นตัวเลขจำนวนเต็ม";
   }
   return "";
 };
@@ -64,13 +67,13 @@ export const validateInputRanges = (
   const errors: string[] = [];
 
   if (Number.isNaN(locks) || locks < 1 || locks > 70) {
-    errors.push("Locks must be between 1 and 70");
+    errors.push("โปรดระบุจำนวน Locks");
   }
   if (Number.isNaN(stocks) || stocks < 1 || stocks > 80) {
-    errors.push("Stocks must be between 1 and 80");
+    errors.push("โปรดระบุจำนวน Stocks");
   }
   if (Number.isNaN(barrels) || barrels < 1 || barrels > 90) {
-    errors.push("Barrels must be between 1 and 90");
+    errors.push("โปรดระบุจำนวน Barrels");
   }
 
   return errors;
