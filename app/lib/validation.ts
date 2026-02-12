@@ -45,7 +45,7 @@ export const validateNumericField = (
     return `โปรดระบุ${fieldName}`;
   }
   if (!isInteger(value)) {
-    return "โปรดระบุตัวเลข";
+    return "โปรดระบุตัวเลขจำนวนเต็ม";
   }
   if (Number(value) < 0) {
     return "กรุณาระบุเป็นตัวเลขจำนวนเต็ม";
